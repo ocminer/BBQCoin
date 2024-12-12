@@ -1,0 +1,33 @@
+#!/usr/bin/make -f
+# -*- mode: makefile; coding: utf-8 -*-
+
+#DEB_MAKE_CHECK_TARGET = test_bbqcoin
+#build/bbqcoind::
+#	$(if $(filter nocheck,$(DEB_BUILD_OPTIONS)),,src/test_bbqcoin)
+
+DEB_INSTALL_EXAMPLES_bbqcoind += debian/examples/*
+DEB_INSTALL_MANPAGES_bbqcoind += debian/manpages/*
+
+%:
+	dh --with bash-completion $@
+
+override_dh_auto_build:
+	cd src; $(MAKE) -j$(nproc) -f makefile.unix bbqcoind
+	$(MAKE) -j$(nproc)
+
+override_dh_auto_clean:
+	if [ -f Makefile ]; then $(MAKE) clean; else rm -rf build/; rm -f bbqcoin-qt; fi
+	cd src; $(MAKE) -f makefile.unix clean
+
+override_dh_auto_configure:
+	qmake bbqcoin-qt.pro USE_QRCODE=1
+
+override_dh_auto_test:
+	# cd src; $(MAKE) -j$(nproc) -f makefile.unix test_bbqcoin
+	# src/test_bbqcoin
+
+# Ensure wrapper is set executable
+binary-post-install/bbqcoind:
+	chmod +x $(cdbs_curdestdir)usr/bin/bbqcoind
+binary-post-install/bbqcoin-qt:
+	chmod +x $(cdbs_curdestdir)usr/bin/bbqcoin-qt
